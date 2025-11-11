@@ -20,8 +20,8 @@ public class VaccineRecord {
     private Integer id;
 
     private String vaccineName;
-    private String date;
-
+    @Column(name = "VACCINATION_DATE")
+    private String vaccinationDate; 
     // Relación: Muchas vacunas pertenecen a una mascota
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pet_id", nullable = false) // La columna en la BD

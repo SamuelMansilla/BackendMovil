@@ -24,10 +24,10 @@ public class Usuario implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String firstname;
-
-    @Column(nullable = false)
+    
+    @Column(nullable = true)
     private String lastname;
 
     @Column(nullable = false, unique = true)
