@@ -34,7 +34,7 @@ RUN mkdir /wallet
 RUN unzip /app/wallet.zip -d /wallet
 
 # Copiamos el .jar de la etapa 1
-COPY --from=build /build/target/levelup-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /build/target/PatasyColas-0.0.1-SNAPSHOT.jar app.jar
 
 # Exponemos el puerto
 ENV PORT=8080
