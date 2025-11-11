@@ -28,40 +28,34 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
-    // El UsuarioRepository es necesario para el UserDetailsService
+    // --- ¡CAMBIO 1! ---
+    // Quitamos 'JwtAuthFilter' de aquí. Ya no se inyecta en la clase.
     private final UsuarioRepository usuarioRepository;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception { 
+        // --- ¡CAMBIO 2! ---
+        // 'JwtAuthFilter' se inyecta AQUÍ, en el método, no en la clase.
+        
         http
-                .csrf(csrf -> csrf.disable()) // Deshabilitar CSRF
-                // ¡Añadido! Activa la configuración de CORS
+                .csrf(csrf -> csrf.disable()) 
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints de autenticación (login/registro) son públicos
                         .requestMatchers("/api/auth/**").permitAll()
-                        
-                        // Todos los endpoints de mascotas están protegidos
                         .requestMatchers("/api/pets/**").authenticated() 
-                        
-                        // Cualquier otra petición debe estar autenticada
                         .anyRequest().authenticated() 
                 )
                 .sessionManagement(session -> session
-                        // Usamos sesiones sin estado (STATELESS) porque usamos JWT
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) 
                 )
-                // ¡Cambiado! Ahora llama al *método* que crea el bean
                 .authenticationProvider(authenticationProvider())
-                // Añadimos nuestro filtro JWT antes del filtro de usuario/contraseña
+                // La variable 'jwtAuthFilter' ahora viene del parámetro del método
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // --- ¡BEANS AÑADIDOS! ---
-    // Estos son los beans que faltaban y causaban el error de arranque
+    // --- (El resto de los beans permanecen igual) ---
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -83,18 +77,14 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        // Asegúrate de que UsuarioRepository tenga findByEmail
         return username -> usuarioRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
     }
 
-    // --- ¡BEAN DE CORS AÑADIDO! ---
-    // Esto evitará errores de CORS cuando tu frontend en Render intente conectarse
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Permite peticiones desde localhost (desarrollo) y cualquier subdominio de Render (producción)
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:3000",
             "https://*.onrender.com" 
